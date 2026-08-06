@@ -1,12 +1,28 @@
 import 'package:flutter_test/flutter_test.dart';
-
 import 'package:flutter_material_drawer/flutter_material_drawer.dart';
 
 void main() {
-  test('adds one to input values', () {
-    final calculator = Calculator();
-    expect(calculator.addOne(2), 3);
-    expect(calculator.addOne(-7), -6);
-    expect(calculator.addOne(0), 1);
+  group('MaterialDrawerController Tests', () {
+    test('initial selected index should be 0', () {
+      final controller = MaterialDrawerController();
+      expect(controller.selectedIndex, 0);
+    });
+
+    test('select should update index and notify listeners', () {
+      final controller = MaterialDrawerController();
+      int callCount = 0;
+      controller.addListener(() {
+        callCount++;
+      });
+
+      controller.select(2);
+      expect(controller.selectedIndex, 2);
+      expect(callCount, 1);
+
+      // Selecting the same index should not notify again
+      controller.select(2);
+      expect(controller.selectedIndex, 2);
+      expect(callCount, 1);
+    });
   });
 }
