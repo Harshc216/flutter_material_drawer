@@ -40,6 +40,7 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   late final MaterialDrawerController _drawerController;
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   
   // Customization states
   DrawerType _currentDrawerType = DrawerType.rounded;
@@ -103,7 +104,21 @@ class _MyHomePageState extends State<MyHomePage> {
       itemRadius: 16,
     );
 
+    final twitterDrawerTheme = MaterialDrawerTheme(
+      backgroundColor: Colors.white,
+      selectedColor: const Color(0xFF1DA1F2),
+      unselectedColor: Colors.black87,
+      iconColor: Colors.black54,
+      selectedIconColor: const Color(0xFF1DA1F2),
+      headerColor: Colors.white,
+      dividerColor: const Color(0xFFE0E0E0),
+      elevation: _elevation,
+      borderRadius: 0,
+      itemRadius: 28,
+    );
+
     return Scaffold(
+      key: _scaffoldKey,
       appBar: AppBar(
         title: Text(
           _getPageTitle(_drawerController.selectedIndex),
@@ -111,8 +126,28 @@ class _MyHomePageState extends State<MyHomePage> {
         ),
         elevation: 0,
         backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+        leading: IconButton(
+          icon: const Icon(Icons.menu_rounded),
+          onPressed: () => _scaffoldKey.currentState?.openDrawer(),
+          tooltip: 'Open Left Drawer',
+        ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.flutter_dash_rounded),
+            onPressed: () => _scaffoldKey.currentState?.openEndDrawer(),
+            tooltip: 'Open Twitter Drawer',
+          ),
+        ],
       ),
       drawer: MaterialDrawer(
+        controller: _drawerController,
+        items: menuItems,
+        name: 'Jane Doe',
+        email: 'jane.doe@example.com',
+        type: _currentDrawerType,
+        theme: drawerTheme,
+      ),
+      endDrawer: MaterialDrawer(
         controller: _drawerController,
         items: menuItems,
         name: 'Jane Doe',
@@ -120,8 +155,8 @@ class _MyHomePageState extends State<MyHomePage> {
         handle: '@jane_doe_ux',
         followingCount: 184,
         followersCount: '4.8K',
-        type: _currentDrawerType,
-        theme: drawerTheme,
+        type: DrawerType.twitter,
+        theme: twitterDrawerTheme,
       ),
       body: Container(
         decoration: BoxDecoration(
@@ -264,7 +299,8 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   Widget _buildStatCard(String label, DrawerType type, Color color) {
-    final isCurrent = _currentDrawerType == type;
+    final isTwitter = type == DrawerType.twitter;
+    final isCurrent = isTwitter ? false : (_currentDrawerType == type);
     return Card(
       elevation: isCurrent ? 4 : 1,
       shape: RoundedRectangleBorder(
@@ -273,25 +309,32 @@ class _MyHomePageState extends State<MyHomePage> {
       ),
       child: InkWell(
         onTap: () {
-          setState(() {
-            _currentDrawerType = type;
-            if (type == DrawerType.dark) {
-              _headerColor = const Color(0xff303134);
-            } else if (type == DrawerType.gradient) {
-              _headerColor = Colors.transparent;
-            } else if (type == DrawerType.twitter) {
-              _headerColor = Colors.white;
-              _themeSelectedColor = const Color(0xFF1DA1F2);
-            } else {
-              _headerColor = color;
-            }
-          });
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Switched to ${type.name.toUpperCase()} Drawer Style!'),
-              duration: const Duration(seconds: 1),
-            ),
-          );
+          if (isTwitter) {
+            _scaffoldKey.currentState?.openEndDrawer();
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Opening Twitter Style (Right Drawer)!'),
+                duration: Duration(seconds: 1),
+              ),
+            );
+          } else {
+            setState(() {
+              _currentDrawerType = type;
+              if (type == DrawerType.dark) {
+                _headerColor = const Color(0xff303134);
+              } else if (type == DrawerType.gradient) {
+                _headerColor = Colors.transparent;
+              } else {
+                _headerColor = color;
+              }
+            });
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Switched to ${type.name.toUpperCase()} Drawer Style!'),
+                duration: const Duration(seconds: 1),
+              ),
+            );
+          }
         },
         borderRadius: BorderRadius.circular(16),
         child: Padding(
@@ -299,7 +342,11 @@ class _MyHomePageState extends State<MyHomePage> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(Icons.style_rounded, size: 28, color: color),
+              Icon(
+                isTwitter ? Icons.flutter_dash_rounded : Icons.style_rounded,
+                size: 28,
+                color: color,
+              ),
               const SizedBox(height: 8),
               Text(
                 label,
@@ -308,11 +355,11 @@ class _MyHomePageState extends State<MyHomePage> {
               ),
               const SizedBox(height: 4),
               Text(
-                isCurrent ? 'Active' : 'Apply',
+                isTwitter ? 'Open Right' : (isCurrent ? 'Active' : 'Apply'),
                 style: TextStyle(
                   fontSize: 12,
-                  color: isCurrent ? color : Colors.grey,
-                  fontWeight: isCurrent ? FontWeight.bold : FontWeight.normal,
+                  color: (isTwitter || isCurrent) ? color : Colors.grey,
+                  fontWeight: (isTwitter || isCurrent) ? FontWeight.bold : FontWeight.normal,
                 ),
               ),
             ],
@@ -432,23 +479,31 @@ class _MyHomePageState extends State<MyHomePage> {
           spacing: 8,
           runSpacing: 8,
           children: DrawerType.values.map((type) {
+            final isTwitter = type == DrawerType.twitter;
             return ChoiceChip(
-              label: Text(type.name.toUpperCase()),
-              selected: _currentDrawerType == type,
+              label: Text(isTwitter ? 'TWITTER (RIGHT)' : type.name.toUpperCase()),
+              selected: isTwitter ? false : (_currentDrawerType == type),
               onSelected: (selected) {
                 if (selected) {
-                  setState(() {
-                    _currentDrawerType = type;
-                    // Automatically adjust header color to match style
-                    if (type == DrawerType.dark) {
-                      _headerColor = const Color(0xff303134);
-                    } else if (type == DrawerType.gradient) {
-                      _headerColor = Colors.transparent;
-                    } else if (type == DrawerType.twitter) {
-                      _headerColor = Colors.white;
-                      _themeSelectedColor = const Color(0xFF1DA1F2);
-                    }
-                  });
+                  if (isTwitter) {
+                    _scaffoldKey.currentState?.openEndDrawer();
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Opening Twitter Style (Right Drawer)!'),
+                        duration: Duration(seconds: 1),
+                      ),
+                    );
+                  } else {
+                    setState(() {
+                      _currentDrawerType = type;
+                      // Automatically adjust header color to match style
+                      if (type == DrawerType.dark) {
+                        _headerColor = const Color(0xff303134);
+                      } else if (type == DrawerType.gradient) {
+                        _headerColor = Colors.transparent;
+                      }
+                    });
+                  }
                 }
               },
             );
