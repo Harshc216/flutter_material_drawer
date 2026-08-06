@@ -16,6 +16,7 @@ class DrawerHeaderWidget extends StatelessWidget {
     this.handle,
     this.followingCount,
     this.followersCount,
+    this.onProfileTap,
   });
 
   final String name;
@@ -26,6 +27,7 @@ class DrawerHeaderWidget extends StatelessWidget {
   final String? handle;
   final int? followingCount;
   final String? followersCount;
+  final VoidCallback? onProfileTap;
 
   @override
   Widget build(BuildContext context) {
@@ -50,23 +52,32 @@ class DrawerHeaderWidget extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              CircleAvatar(
-                radius: 28,
-                backgroundImage: image,
-                backgroundColor: theme.selectedColor.withValues(alpha: 0.1),
-                child: image == null
-                    ? Icon(Icons.person_rounded, size: 28, color: theme.selectedColor)
-                    : null,
-              ),
-              const SizedBox(height: 12),
-              Text(
-                name,
-                style: textStylePrimary.copyWith(fontSize: 18),
-              ),
-              const SizedBox(height: 2),
-              Text(
-                handle ?? '@${email.split('@')[0]}',
-                style: textStyleSecondary,
+              GestureDetector(
+                onTap: onProfileTap,
+                behavior: HitTestBehavior.opaque,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    CircleAvatar(
+                      radius: 28,
+                      backgroundImage: image,
+                      backgroundColor: theme.selectedColor.withValues(alpha: 0.1),
+                      child: image == null
+                          ? Icon(Icons.flutter_dash_rounded, size: 28, color: theme.selectedColor)
+                          : null,
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      name,
+                      style: textStylePrimary.copyWith(fontSize: 18),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      handle ?? '@${email.split('@')[0]}',
+                      style: textStyleSecondary,
+                    ),
+                  ],
+                ),
               ),
               const SizedBox(height: 14),
               Row(
@@ -116,41 +127,45 @@ class DrawerHeaderWidget extends StatelessWidget {
       child: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(16),
-          child: Row(
-            children: [
-              CircleAvatar(
-                radius: 35,
-                backgroundImage: image,
-                child: image == null
-                    ? const Icon(Icons.person, size: 35, color: Colors.white)
-                    : null,
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      name,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-                    Text(
-                      email,
-                      style: const TextStyle(
-                        color: Colors.white70,
-                        fontSize: 14,
-                      ),
-                    ),
-                  ],
+          child: GestureDetector(
+            onTap: onProfileTap,
+            behavior: HitTestBehavior.opaque,
+            child: Row(
+              children: [
+                CircleAvatar(
+                  radius: 35,
+                  backgroundImage: image,
+                  child: image == null
+                      ? const Icon(Icons.person, size: 35, color: Colors.white)
+                      : null,
                 ),
-              ),
-            ],
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        name,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        email,
+                        style: const TextStyle(
+                          color: Colors.white70,
+                          fontSize: 14,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),

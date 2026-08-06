@@ -9,7 +9,7 @@ import 'drawer_header.dart';
 import 'drawer_item.dart';
 
 /// Main Material Drawer widget.
-class MaterialDrawer extends StatelessWidget {
+class MaterialDrawer extends StatefulWidget {
   const MaterialDrawer({
     super.key,
     required this.controller,
@@ -22,6 +22,10 @@ class MaterialDrawer extends StatelessWidget {
     this.handle,
     this.followingCount,
     this.followersCount,
+    this.onProfileTap,
+    this.onThemeToggle,
+    this.width,
+    this.maxItems,
   });
 
   final MaterialDrawerController controller;
@@ -47,46 +51,128 @@ class MaterialDrawer extends StatelessWidget {
   /// Number of followers (Twitter style)
   final String? followersCount;
 
+  /// Callback when profile header/avatar is tapped (Twitter style)
+  final VoidCallback? onProfileTap;
+
+  /// Callback when theme toggle button is tapped (Twitter style)
+  final VoidCallback? onThemeToggle;
+
+  /// Custom width for the drawer
+  final double? width;
+
+  /// Maximum number of items to show initially before collapsing.
+  /// If null, all items are shown.
+  final int? maxItems;
+
+  @override
+  State<MaterialDrawer> createState() => _MaterialDrawerState();
+}
+
+class _MaterialDrawerState extends State<MaterialDrawer> {
+  bool _isExpanded = false;
+
   @override
   Widget build(BuildContext context) {
+    final showCollapse = widget.maxItems != null && widget.items.length > widget.maxItems!;
+    
+    // Calculate how many items to display
+    final int displayCount;
+    if (showCollapse) {
+      if (_isExpanded) {
+        displayCount = widget.items.length + 1; // all items + "See Less"
+      } else {
+        displayCount = widget.maxItems!; // maxItems (first N-1 items + "See All")
+      }
+    } else {
+      displayCount = widget.items.length;
+    }
+
     return AnimatedBuilder(
-      animation: controller,
+      animation: widget.controller,
       builder: (context, child) {
+        final isDark = Theme.of(context).brightness == Brightness.dark;
         return Drawer(
-          width: DrawerConstants.drawerWidth,
-          elevation: theme.elevation,
+          width: widget.width ?? DrawerConstants.drawerWidth,
+          elevation: widget.theme.elevation,
           shape: _shape(),
           child: Container(
             decoration: _decoration(),
             child: Column(
               children: [
                 DrawerHeaderWidget(
-                  name: name,
-                  email: email,
-                  image: image,
-                  theme: theme,
-                  type: type,
-                  handle: handle,
-                  followingCount: followingCount,
-                  followersCount: followersCount,
+                  name: widget.name,
+                  email: widget.email,
+                  image: widget.image,
+                  theme: widget.theme,
+                  type: widget.type,
+                  handle: widget.handle,
+                  followingCount: widget.followingCount,
+                  followersCount: widget.followersCount,
+                  onProfileTap: widget.onProfileTap,
                 ),
 
                 Expanded(
                   child: ListView.separated(
                     padding: const EdgeInsets.symmetric(vertical: 8),
-                    itemCount: items.length,
+                    itemCount: displayCount,
                     separatorBuilder: (context, index) =>
-                        DrawerDividerWidget(theme: theme),
+                        DrawerDividerWidget(theme: widget.theme),
                     itemBuilder: (context, index) {
-                      final item = items[index];
+                      if (showCollapse) {
+                        if (!_isExpanded && index == widget.maxItems! - 1) {
+                          // Render "See All" button
+                          return DrawerItem(
+                            item: DrawerMenuItem(
+                              title: 'See All',
+                              icon: Icons.keyboard_arrow_down_rounded,
+                              onTap: () {
+                                setState(() {
+                                  _isExpanded = true;
+                                });
+                              },
+                            ),
+                            selected: false,
+                            theme: widget.theme,
+                            type: widget.type,
+                            onTap: () {
+                              setState(() {
+                                _isExpanded = true;
+                              });
+                            },
+                          );
+                        } else if (_isExpanded && index == widget.items.length) {
+                          // Render "See Less" button
+                          return DrawerItem(
+                            item: DrawerMenuItem(
+                              title: 'See Less',
+                              icon: Icons.keyboard_arrow_up_rounded,
+                              onTap: () {
+                                setState(() {
+                                  _isExpanded = false;
+                                });
+                              },
+                            ),
+                            selected: false,
+                            theme: widget.theme,
+                            type: widget.type,
+                            onTap: () {
+                              setState(() {
+                                _isExpanded = false;
+                              });
+                            },
+                          );
+                        }
+                      }
+
+                      final item = widget.items[index];
 
                       return DrawerItem(
                         item: item,
-                        selected: controller.selectedIndex == index,
-                        theme: theme,
-                        type: type,
+                        selected: widget.controller.selectedIndex == index,
+                        theme: widget.theme,
+                        type: widget.type,
                         onTap: () {
-                          controller.select(index);
+                          widget.controller.select(index);
 
                           Navigator.pop(context);
 
@@ -97,9 +183,9 @@ class MaterialDrawer extends StatelessWidget {
                   ),
                 ),
 
-                if (type == DrawerType.twitter) ...[
+                if (widget.type == DrawerType.twitter) ...[
                   Divider(
-                    color: theme.dividerColor,
+                    color: widget.theme.dividerColor,
                     height: 1,
                     thickness: 1,
                   ),
@@ -110,17 +196,17 @@ class MaterialDrawer extends StatelessWidget {
                       children: [
                         IconButton(
                           icon: Icon(
-                            Icons.lightbulb_outline_rounded,
-                            color: theme.unselectedColor.withValues(alpha: 0.6),
+                            isDark
+                                ? Icons.light_mode_rounded
+                                : Icons.dark_mode_rounded,
+                            color: widget.theme.unselectedColor.withValues(alpha: 0.6),
                           ),
-                          onPressed: () {
-                            // Showcase Dark Mode Action callback or placeholder
-                          },
+                          onPressed: widget.onThemeToggle,
                         ),
                         IconButton(
                           icon: Icon(
                             Icons.qr_code_rounded,
-                            color: theme.unselectedColor.withValues(alpha: 0.6),
+                            color: widget.theme.unselectedColor.withValues(alpha: 0.6),
                           ),
                           onPressed: () {
                             // QR Code action callback
@@ -139,7 +225,7 @@ class MaterialDrawer extends StatelessWidget {
   }
 
   ShapeBorder? _shape() {
-    switch (type) {
+    switch (widget.type) {
       case DrawerType.rounded:
         return const RoundedRectangleBorder(
           borderRadius: BorderRadius.horizontal(right: Radius.circular(30)),
@@ -151,7 +237,7 @@ class MaterialDrawer extends StatelessWidget {
   }
 
   Decoration? _decoration() {
-    switch (type) {
+    switch (widget.type) {
       case DrawerType.gradient:
         return const BoxDecoration(
           gradient: LinearGradient(
@@ -173,7 +259,7 @@ class MaterialDrawer extends StatelessWidget {
       case DrawerType.rounded:
       case DrawerType.classic:
       case DrawerType.twitter:
-        return BoxDecoration(color: theme.backgroundColor);
+        return BoxDecoration(color: widget.theme.backgroundColor);
     }
   }
 }

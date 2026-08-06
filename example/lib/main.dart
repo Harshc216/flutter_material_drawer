@@ -5,8 +5,21 @@ void main() {
   runApp(const MyApp());
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
   const MyApp({super.key});
+
+  @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  ThemeMode _themeMode = ThemeMode.light;
+
+  void _toggleTheme() {
+    setState(() {
+      _themeMode = _themeMode == ThemeMode.light ? ThemeMode.dark : ThemeMode.light;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -24,15 +37,34 @@ class MyApp extends StatelessWidget {
         useMaterial3: true,
         fontFamily: 'Roboto',
       ),
-      themeMode: ThemeMode.light,
-      home: const MyHomePage(),
+      darkTheme: ThemeData(
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: const Color(0xFF4F46E5),
+          brightness: Brightness.dark,
+        ),
+        scaffoldBackgroundColor: const Color(0xFF121212),
+        useMaterial3: true,
+        fontFamily: 'Roboto',
+      ),
+      themeMode: _themeMode,
+      home: MyHomePage(
+        themeMode: _themeMode,
+        onThemeToggle: _toggleTheme,
+      ),
       debugShowCheckedModeBanner: false,
     );
   }
 }
 
 class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key});
+  const MyHomePage({
+    super.key,
+    required this.themeMode,
+    required this.onThemeToggle,
+  });
+
+  final ThemeMode themeMode;
+  final VoidCallback onThemeToggle;
 
   @override
   State<MyHomePage> createState() => _MyHomePageState();
@@ -47,6 +79,8 @@ class _MyHomePageState extends State<MyHomePage> {
   Color _themeSelectedColor = const Color(0xFF4F46E5);
   Color _headerColor = const Color(0xFF4F46E5);
   double _elevation = 4.0;
+  bool _isHalfWidth = false;
+  bool _collapseItems = true;
 
   @override
   void initState() {
@@ -90,32 +124,50 @@ class _MyHomePageState extends State<MyHomePage> {
       ),
     ];
 
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     // Theme configuration based on user customization settings
     final drawerTheme = MaterialDrawerTheme(
-      backgroundColor: _currentDrawerType == DrawerType.dark ? const Color(0xff202124) : Colors.white,
+      backgroundColor: (isDark || _currentDrawerType == DrawerType.dark) ? const Color(0xff202124) : Colors.white,
       selectedColor: _themeSelectedColor,
-      unselectedColor: _currentDrawerType == DrawerType.dark ? Colors.white70 : Colors.black87,
-      iconColor: _currentDrawerType == DrawerType.dark ? Colors.white70 : Colors.black54,
+      unselectedColor: (isDark || _currentDrawerType == DrawerType.dark) ? Colors.white70 : Colors.black87,
+      iconColor: (isDark || _currentDrawerType == DrawerType.dark) ? Colors.white70 : Colors.black54,
       selectedIconColor: Colors.white,
-      headerColor: _headerColor,
-      dividerColor: _currentDrawerType == DrawerType.dark ? Colors.white12 : const Color(0xFFE0E0E0),
+      headerColor: isDark ? const Color(0xff303134) : _headerColor,
+      dividerColor: (isDark || _currentDrawerType == DrawerType.dark) ? Colors.white12 : const Color(0xFFE0E0E0),
       elevation: _elevation,
       borderRadius: 24,
       itemRadius: 16,
     );
 
     final twitterDrawerTheme = MaterialDrawerTheme(
-      backgroundColor: Colors.white,
+      backgroundColor: isDark ? const Color(0xff202124) : Colors.white,
       selectedColor: const Color(0xFF1DA1F2),
-      unselectedColor: Colors.black87,
-      iconColor: Colors.black54,
+      unselectedColor: isDark ? Colors.white70 : Colors.black87,
+      iconColor: isDark ? Colors.white70 : Colors.black54,
       selectedIconColor: const Color(0xFF1DA1F2),
-      headerColor: Colors.white,
-      dividerColor: const Color(0xFFE0E0E0),
+      headerColor: isDark ? const Color(0xff202124) : Colors.white,
+      dividerColor: isDark ? Colors.white12 : const Color(0xFFE0E0E0),
       elevation: _elevation,
       borderRadius: 0,
       itemRadius: 28,
     );
+
+    final drawerWidth = _isHalfWidth
+        ? (MediaQuery.of(context).size.width < 500
+            ? MediaQuery.of(context).size.width * 0.5
+            : 180.0)
+        : null;
+
+    final VoidCallback onProfileTap = () {
+      _drawerController.select(1); // navigates to User Profile view (index 1)
+      if (_scaffoldKey.currentState?.isDrawerOpen ?? false) {
+        _scaffoldKey.currentState?.closeDrawer();
+      }
+      if (_scaffoldKey.currentState?.isEndDrawerOpen ?? false) {
+        _scaffoldKey.currentState?.closeEndDrawer();
+      }
+    };
 
     return Scaffold(
       key: _scaffoldKey,
@@ -146,6 +198,9 @@ class _MyHomePageState extends State<MyHomePage> {
         email: 'jane.doe@example.com',
         type: _currentDrawerType,
         theme: drawerTheme,
+        onProfileTap: onProfileTap,
+        width: drawerWidth,
+        maxItems: _collapseItems ? 3 : null,
       ),
       endDrawer: MaterialDrawer(
         controller: _drawerController,
@@ -157,6 +212,10 @@ class _MyHomePageState extends State<MyHomePage> {
         followersCount: '4.8K',
         type: DrawerType.twitter,
         theme: twitterDrawerTheme,
+        onProfileTap: onProfileTap,
+        onThemeToggle: widget.onThemeToggle,
+        width: drawerWidth,
+        maxItems: _collapseItems ? 3 : null,
       ),
       body: Container(
         decoration: BoxDecoration(
@@ -597,6 +656,30 @@ class _MyHomePageState extends State<MyHomePage> {
               _elevation = val;
             });
           },
+        ),
+        // Half-width drawer toggle switch
+        SwitchListTile(
+          title: const Text('Open Drawers Half-Width', style: TextStyle(fontWeight: FontWeight.bold)),
+          subtitle: const Text('Reduces both left and right drawer widths to half (cap at 180px for desktop)'),
+          value: _isHalfWidth,
+          onChanged: (val) {
+            setState(() {
+              _isHalfWidth = val;
+            });
+          },
+          contentPadding: EdgeInsets.zero,
+        ),
+        // Collapsible drawer items toggle switch
+        SwitchListTile(
+          title: const Text('Collapse Drawer Items', style: TextStyle(fontWeight: FontWeight.bold)),
+          subtitle: const Text('Shows only first 2 items with a "See All" button when enabled'),
+          value: _collapseItems,
+          onChanged: (val) {
+            setState(() {
+              _collapseItems = val;
+            });
+          },
+          contentPadding: EdgeInsets.zero,
         ),
         const SizedBox(height: 16),
         _buildInfoCard(
