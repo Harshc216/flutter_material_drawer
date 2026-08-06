@@ -17,4 +17,7 @@ enum DrawerType {
 
   /// Dark theme drawer.
   dark,
+
+  /// Twitter style drawer.
+  twitter,
 }

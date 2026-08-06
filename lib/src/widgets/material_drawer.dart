@@ -19,6 +19,9 @@ class MaterialDrawer extends StatelessWidget {
     this.image,
     this.theme = const MaterialDrawerTheme(),
     this.type = DrawerType.classic,
+    this.handle,
+    this.followingCount,
+    this.followersCount,
   });
 
   final MaterialDrawerController controller;
@@ -34,6 +37,15 @@ class MaterialDrawer extends StatelessWidget {
   final MaterialDrawerTheme theme;
 
   final DrawerType type;
+
+  /// Handle for Twitter profile style (e.g. @username)
+  final String? handle;
+
+  /// Number of accounts the profile is following (Twitter style)
+  final int? followingCount;
+
+  /// Number of followers (Twitter style)
+  final String? followersCount;
 
   @override
   Widget build(BuildContext context) {
@@ -53,6 +65,10 @@ class MaterialDrawer extends StatelessWidget {
                   email: email,
                   image: image,
                   theme: theme,
+                  type: type,
+                  handle: handle,
+                  followingCount: followingCount,
+                  followersCount: followersCount,
                 ),
 
                 Expanded(
@@ -68,6 +84,7 @@ class MaterialDrawer extends StatelessWidget {
                         item: item,
                         selected: controller.selectedIndex == index,
                         theme: theme,
+                        type: type,
                         onTap: () {
                           controller.select(index);
 
@@ -79,6 +96,40 @@ class MaterialDrawer extends StatelessWidget {
                     },
                   ),
                 ),
+
+                if (type == DrawerType.twitter) ...[
+                  Divider(
+                    color: theme.dividerColor,
+                    height: 1,
+                    thickness: 1,
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        IconButton(
+                          icon: Icon(
+                            Icons.lightbulb_outline_rounded,
+                            color: theme.unselectedColor.withValues(alpha: 0.6),
+                          ),
+                          onPressed: () {
+                            // Showcase Dark Mode Action callback or placeholder
+                          },
+                        ),
+                        IconButton(
+                          icon: Icon(
+                            Icons.qr_code_rounded,
+                            color: theme.unselectedColor.withValues(alpha: 0.6),
+                          ),
+                          onPressed: () {
+                            // QR Code action callback
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ],
             ),
           ),
@@ -121,6 +172,7 @@ class MaterialDrawer extends StatelessWidget {
 
       case DrawerType.rounded:
       case DrawerType.classic:
+      case DrawerType.twitter:
         return BoxDecoration(color: theme.backgroundColor);
     }
   }

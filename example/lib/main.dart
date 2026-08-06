@@ -117,6 +117,9 @@ class _MyHomePageState extends State<MyHomePage> {
         items: menuItems,
         name: 'Jane Doe',
         email: 'jane.doe@example.com',
+        handle: '@jane_doe_ux',
+        followingCount: 184,
+        followersCount: '4.8K',
         type: _currentDrawerType,
         theme: drawerTheme,
       ),
@@ -198,10 +201,12 @@ class _MyHomePageState extends State<MyHomePage> {
           mainAxisSpacing: 12,
           childAspectRatio: 1.4,
           children: [
-            _buildStatCard('Classic style', DrawerType.classic, Colors.blue),
-            _buildStatCard('Rounded layout', DrawerType.rounded, Colors.purple),
-            _buildStatCard('Vibrant Gradient', DrawerType.gradient, Colors.deepOrange),
+            _buildStatCard('Classic Style', DrawerType.classic, Colors.blue),
+            _buildStatCard('Rounded Design', DrawerType.rounded, Colors.purple),
+            _buildStatCard('Gradient Look', DrawerType.gradient, Colors.deepOrange),
             _buildStatCard('Glassmorphism', DrawerType.glass, Colors.teal),
+            _buildStatCard('Minimal Style', DrawerType.minimal, Colors.blueGrey),
+            _buildStatCard('Twitter Style', DrawerType.twitter, const Color(0xFF1DA1F2)),
           ],
         ),
         const SizedBox(height: 20),
@@ -274,6 +279,9 @@ class _MyHomePageState extends State<MyHomePage> {
               _headerColor = const Color(0xff303134);
             } else if (type == DrawerType.gradient) {
               _headerColor = Colors.transparent;
+            } else if (type == DrawerType.twitter) {
+              _headerColor = Colors.white;
+              _themeSelectedColor = const Color(0xFF1DA1F2);
             } else {
               _headerColor = color;
             }
@@ -436,6 +444,9 @@ class _MyHomePageState extends State<MyHomePage> {
                       _headerColor = const Color(0xff303134);
                     } else if (type == DrawerType.gradient) {
                       _headerColor = Colors.transparent;
+                    } else if (type == DrawerType.twitter) {
+                      _headerColor = Colors.white;
+                      _themeSelectedColor = const Color(0xFF1DA1F2);
                     }
                   });
                 }
