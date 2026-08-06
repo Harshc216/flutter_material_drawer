@@ -11,7 +11,7 @@
 ## 📷 Preview
 
 <p align="center">
-  <img src="assets/material_drawer_preview.gif" alt="Material Drawer Preview" width="320"/>
+  <img src="assets/material_drawer.gif" alt="Material Drawer Preview" width="320"/>
 </p>
 
 *A premium interactive drawer component featuring rounded animations, live dark/light mode toggling, collapsible menus, and responsive side configurations.*
